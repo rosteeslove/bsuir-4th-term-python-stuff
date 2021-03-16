@@ -2,6 +2,7 @@ import binary_string_io as bin_str_io
 import basic_operations as basic
 import arithmetic as arithm
 
+
 def main():
 
     # tests:
@@ -17,7 +18,7 @@ def main():
             if prod != i*j:
                 print('error: {0}*{1} = {2}'.format(i, j, prod))
 
-            #idiv:
+            # idiv:
             if j == 0:
                 continue
 
@@ -28,7 +29,9 @@ def main():
             if i != q*j + r:
                 print('error: {0}/{1} = {2} ({3})'.format(i, j, q, r))
 
-    
+            if q != i // j or r != i % j:
+                print('error: {0}/{1} = {2} ({3})'.format(i, j, q, r))
+  
 
 if __name__ == "__main__":
     main()

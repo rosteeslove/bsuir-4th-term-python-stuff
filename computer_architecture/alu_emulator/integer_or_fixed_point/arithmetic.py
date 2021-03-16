@@ -56,7 +56,7 @@ def mul(a, b):
             overflow = overflow or ov
         b = basic.shift_left(b)
 
-    return p, overflow
+    return p
 
 
 def full_mul(a, b):

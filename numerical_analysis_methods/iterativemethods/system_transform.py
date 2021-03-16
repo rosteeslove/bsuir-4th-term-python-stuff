@@ -1,5 +1,3 @@
-# TODO: add documentation.
-
 import numpy as np
 
 # A:array-n-x-n * x:array-n-x-1 = b:array-n-x-1

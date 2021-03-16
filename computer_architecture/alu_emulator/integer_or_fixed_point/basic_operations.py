@@ -44,7 +44,7 @@ def sum(a, b):
         else:
             c = (a_bit if a_bit is not None else '0') + c
 
-    return c, extra_bit
+    return c
 
 
 def invert_bits(a):
@@ -68,7 +68,7 @@ def neg(a, exact = False):
     """
     
     b = invert_bits(a)
-    d, _ = sum(b, '01')
+    d = sum(b, '01')
 
     if exact and a == d:
         return '0' + d

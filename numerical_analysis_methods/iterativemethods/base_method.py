@@ -1,31 +1,20 @@
 """
 This module contains base methods for iteratively solving systems of
-linear equations.  So called 'simple iterations method' and seidel
+linear equations.  So called 'simple iterations method' and Seidel
 method both override the 'solve' method of this module.
 
 The science behind all that follows is to be found here:
 https://math.semestr.ru/optim/iter.php
 """
 
-# TODO: docstrings are to be added
 
 import math
 import numpy as np
+
 import system_transform as st
 
 
-MAX_ITERATIONS_COUNT = 256
-
-
-def _naive_residual(A, b, x):
-    """
-    Returns [the residual of the x-vector solution]*
-    to the equation 'A*x = b'.
-
-    
-    """
-    residuals = abs(A*x - b)
-    return np.amax(residuals)
+MAX_ITERATIONS_COUNT = 4096
 
     
 def _metric_one_coefficient(B):
@@ -70,8 +59,9 @@ def _metric_three_distance(x, y):
 
 def _choose_distance_metric(B):
     """
-    Returns either [the alpha coefficient and the distance-measuring
-    method depending on the chosen metric] or [None if the]
+    Return either [the alpha coefficient and the distance-measuring
+    method depending on the chosen metric] or [None if the criteria
+    of convergence is not met].
     """
     alpha = _metric_one_coefficient(B)
     if alpha < 1:
@@ -87,11 +77,21 @@ def _choose_distance_metric(B):
 
     return None
 
+
+def check_convergence(A, b):
+    """
+    Return True if the criteria of convergence is met for the
+    A matrix.
+    """
+    B, _ = st.system_transform(A, b)
+    return _choose_distance_metric(B) is not None
+
+
 def _estimate_error(alpha, first_distance, last_distance, iter_num):
     """
-    Returns the estimated error...
+    Return the estimated error for the most recent iteration
+    (last_distance).
     """
-
     estimation_one = (alpha**iter_num / (1-alpha)) * first_distance
     estimation_two = (alpha / (1-alpha)) * last_distance
 
@@ -100,7 +100,7 @@ def _estimate_error(alpha, first_distance, last_distance, iter_num):
 
 def solve(A, b, precision, iteration_method):
     """
-    Returns the x-vector solution to the A*x=b equation with error
+    Return the x-vector solution to the A*x=b equation with error
     within the precision argument value.  For iterating requires
     some iteration method.
     """
@@ -119,13 +119,12 @@ def solve(A, b, precision, iteration_method):
         first_distance = calculate_distance(x, y)
         last_distance = calculate_distance(x, y)
 
-    iter_num = 1
+    iter_num = 0
     while (((distance_metric is not None
              and _estimate_error(alpha, first_distance, 
                                  last_distance, iter_num) > precision
-            ) or (distance_metric is None 
-                  and _naive_residual(A, b, y) > precision
-           )) and iter_num <= MAX_ITERATIONS_COUNT):
+            ) or (distance_metric is None)
+           ) and iter_num < MAX_ITERATIONS_COUNT):
         x = y
         y = iteration_method(B, x, c)
 
