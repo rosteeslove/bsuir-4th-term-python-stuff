@@ -1,6 +1,18 @@
-import time
-import matplotlib.pyplot as plt
+"""
+This script exists for the following reasons:
 
+- to compare simple iterations method (sim) and Seidel method (sm)
+  i.e. to compare number of iterations both require for the
+  result within epsilon error.
+
+- to explore the relation between 2 sets
+  of systems of linear equations:
+  - systems for which the correct answer can be found by sim.
+  - systems for which the correct answer can be found by sm.
+"""
+
+
+import time
 import numpy as np
 
 import base_method as bm

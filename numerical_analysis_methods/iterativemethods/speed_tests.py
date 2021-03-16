@@ -1,10 +1,31 @@
 """
-TODO: compare time complexity of gauss and seidel.
+This module is to contain a few methods to compare time comlexity
+of iterative methods and Gaussian elimination method variations.
 """
 
+
+# pylint: disable=import-error
+
+
+import os,sys,inspect
 import numpy as np
+import matplotlib.pyplot as plt
+
+import simple_iterations_method as sim
+import seidel_method as sm
+import examples
+
+# I hope the following code is ok:
+current_dir = os.path.dirname(os.path.abspath(
+              inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir) 
+import gaussianelimination
+
 
 """
+This code is here bc I don't know where else could it be.
+
 To understand the relations between sim-converging
 matrix set and seidel-converging matrix-set:
 
