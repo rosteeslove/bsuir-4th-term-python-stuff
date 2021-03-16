@@ -84,6 +84,9 @@ def random_sparse_matrix(size):
     always equal to the size argument hence the score* (or sparsity)
     of the matrix is 1/size.
 
+    Remarks: the matrix should meet this package's base_method's
+    convergence criteria i.e. the check_convergence method should
+    return True.
     *https://machinelearningmastery.com/sparse-matrices-for-machine-learning/#:~:text=A%20matrix%20is%20sparse%20if,Matrices%2C%20Second%20Edition%2C%202017.
     """
     assert size > 2
@@ -93,14 +96,18 @@ def random_sparse_matrix(size):
                                       - size)
 
     for i in range(size):
-        res[i, i] = MAX_ABS_VAL * (2*random.random()-1)
+        res[i, i] = (MAX_ABS_VAL
+                     * random.uniform(0.1, 1.)
+                     * (1 if random.random() < 0.5 else -1))
 
     while desired_nonzero_elements_count > 0:
         i = random.randint(0, size-1)
         j = random.randint(0, size-1)
 
         if res[i, j] == 0:
-            res[i, j] = MAX_ABS_VAL * (2*random.random()-1)
+            res[i, j] = (MAX_ABS_VAL
+                         * random.uniform(0., 0.1/size)
+                         * (1 if random.random() < 0.5 else -1))
             desired_nonzero_elements_count -= 1
 
     return res
