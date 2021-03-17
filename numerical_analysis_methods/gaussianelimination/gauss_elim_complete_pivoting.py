@@ -106,7 +106,6 @@ def _abs_max(A: np.array, index):
     absolute value in the submatrix of A whose 0-0 element is A's
     index-index element.
     """
-    
     the_i, the_j = index, index
 
     for i in range(index, len(A)):
@@ -116,6 +115,23 @@ def _abs_max(A: np.array, index):
                 the_j = j
 
     return the_i, the_j
+
+
+def _abs_max_fast(A: np.array, index):
+    """
+    Return the A-matrix coordinates of an element with the biggest
+    absolute value in the submatrix of A whose 0-0 element is A's
+    index-index element.
+
+    Remark: optimized _abs_max.
+
+    TODO: fix
+    """
+
+    i, j = np.unravel_index(np.argmax(
+           np.absolute(A[index:, index:]), axis=None), 
+                            A.shape)
+    return index+i, index+j
 
 
 def _eliminate(A: np.array, b: np.array, index):

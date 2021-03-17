@@ -17,7 +17,20 @@ def _iteration(B: np.array, x: np.array, c: np.array):
     """
     Completes one iteration of the method.
     """
-    return B @ x + c
+    # The following line of code is removed to match the optimization
+    # level of Seidel method.  In other words this line is too fast
+    # but the desired outcome is to have sim iteration and Seidel
+    # iteration run in roughly the same time.
+
+    # return B @ x + c
+
+    new_x = c.copy()
+
+    for i in range(len(B)):
+        for j in range(len(B)):
+            new_x[i] += B[i, j]*x[j]
+
+    return new_x
 
 
 def solve(A, b, precision):
