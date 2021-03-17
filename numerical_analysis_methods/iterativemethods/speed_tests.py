@@ -27,7 +27,7 @@ from gaussianelimination import gauss_elim_partial_pivoting as gepp
 from gaussianelimination import gauss_elim_complete_pivoting as gecp
 
 
-eps = 0.001
+eps = 0.000001
 
 g1_times = []
 g2_times = []
@@ -36,7 +36,7 @@ g3_times = []
 sim_times = []
 sm_times = []
 
-for size in range(5, 256):
+for size in range(17, 256):
     A = examples.random_sparse_matrix(size)
     b = np.random.rand(size)
 
@@ -56,12 +56,12 @@ for size in range(5, 256):
     g3_times.append(time2-time1)
 
     time1 = time.time()
-    sim_sol = sim.solve(A, b, eps)[0]
+    sim_sol = sim.solve(A, b, eps)
     time2 = time.time()
     sim_times.append(time2-time1)
 
     time1 = time.time()
-    sm_sol = sm.solve(A, b, eps)[0]
+    sm_sol = sm.solve(A, b, eps)
     time2 = time.time()
     sm_times.append(time2-time1)
 
@@ -69,18 +69,19 @@ for size in range(5, 256):
     gauss1_error = np.absolute(true_sol) - np.absolute(gauss1_sol)
     gauss2_error = np.absolute(true_sol) - np.absolute(gauss2_sol)
     gauss3_error = np.absolute(true_sol) - np.absolute(gauss3_sol)
-    sim_error = np.absolute(true_sol) - np.absolute(sim_sol)
-    sm_error = np.absolute(true_sol) - np.absolute(sm_sol)
+    sim_error = np.absolute(true_sol) - np.absolute(sim_sol[0])
+    sm_error = np.absolute(true_sol) - np.absolute(sm_sol[0])
 
+    #print(A)
     print('the biggest error for Gaussian method '
           'w/o pivoting is: {0}'.format(np.amax(gauss1_error)))
     print('the biggest error for Gaussian method '
           'w/ partial pivoting is: {0}'.format(np.amax(gauss2_error)))
     print('the biggest error for Gaussian method '
           'w/ complete pivoting is: {0}'.format(np.amax(gauss3_error)))
-    print('the biggest error for sim: {0}'.format(np.amax(sim_error)))
+    print('the biggest error for sim: {0}\n{1} iterations.'.format(np.amax(sim_error), sim_sol[1]))
     print('the biggest error for '
-          ' Seidel method: {0}\n'.format(np.amax(sm_error)))
+          ' Seidel method: {0}\n{1} iterations.\n\n\n'.format(np.amax(sm_error), sm_sol[1]))
 
 plt.plot(g1_times, label='Gauss w/o pivoting')
 plt.plot(g2_times, label='Gauss w/ partial pivoting')

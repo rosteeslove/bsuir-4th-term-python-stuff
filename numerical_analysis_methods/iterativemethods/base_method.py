@@ -14,7 +14,7 @@ import numpy as np
 import system_transform as st
 
 
-MAX_ITERATIONS_COUNT = 4096
+MAX_ITERATIONS_COUNT = 1_000_000
 
     
 def _metric_one_coefficient(B):

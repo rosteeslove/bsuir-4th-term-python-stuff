@@ -4,7 +4,7 @@ import numpy as np
 
 
 MAX_ABS_VAL = 100
-DEFAULT_SPARSITY_COEFFICIENT = 1.2 # sparsity = 1 - DSC/size
+DEFAULT_SPARSITY_COEFFICIENT = 0.75
 
 random.seed(42)
 
@@ -80,35 +80,42 @@ def random_sparse_matrix(size):
     Generate random sparse matrix which is supposed to be used as the
     A-matrix for the 'A*x = b' system of linear equations.
 
-    For the sake of simplicity the number of non-zero elements is
-    always equal to the size argument hence the score* (or sparsity)
-    of the matrix is 1/size.
+    The score* (or sparsity) of the matrix is roughly equal
+    to DEFAULT_SPARSITY_COEFFICIENT defined in this module.
 
     Remarks: the matrix should meet this package's base_method's
     convergence criteria i.e. the check_convergence method should
     return True.
     *https://machinelearningmastery.com/sparse-matrices-for-machine-learning/#:~:text=A%20matrix%20is%20sparse%20if,Matrices%2C%20Second%20Edition%2C%202017.
     """
-    assert size > 2
+    assert (1 - DEFAULT_SPARSITY_COEFFICIENT) * size**2 > size
 
     res = np.zeros((size, size))
-    desired_nonzero_elements_count = (DEFAULT_SPARSITY_COEFFICIENT*size
-                                      - size)
+    desired_nonzero_elements_count = ((1 - DEFAULT_SPARSITY_COEFFICIENT)
+                                      * (size**2))
 
     for i in range(size):
         res[i, i] = (MAX_ABS_VAL
-                     * random.uniform(0.1, 1.)
+                     * random.uniform(0.5, 1.)
                      * (1 if random.random() < 0.5 else -1))
 
-    while desired_nonzero_elements_count > 0:
-        i = random.randint(0, size-1)
-        j = random.randint(0, size-1)
+    desired_nonzero_elements_count -= size
 
-        if res[i, j] == 0:
-            res[i, j] = (MAX_ABS_VAL
-                         * random.uniform(0., 0.1/size)
-                         * (1 if random.random() < 0.5 else -1))
-            desired_nonzero_elements_count -= 1
+    res_zeros = []
+    for i in range(len(res)):
+        for j in range(len(res)):
+            if i != j:
+                res_zeros.append((i, j))
+
+    while desired_nonzero_elements_count > 0:
+        index = random.randint(0, len(res_zeros)-1)
+        i, j = res_zeros[index]
+        res_zeros.pop(index)
+
+        res[i, j] = (MAX_ABS_VAL
+                     * random.uniform(0., 0.5/size)
+                     * (1 if random.random() < 0.5 else -1))
+        desired_nonzero_elements_count -= 1
 
     return res
 
