@@ -31,14 +31,19 @@ eps = 0.000001
 
 g1_times = []
 g2_times = []
-# g3_times = []
+g3_times = []
 
 sim_times = []
 sm_times = []
 
+np_times = []
+
 for size in range(16, 256):
-    A = examples.random_sparse_matrix(size)
     b = np.random.rand(size)
+    while True:
+        A = (size * np.identity(size) + np.random.rand(size, size))
+        if bm.check_convergence(A, b):
+            break
 
     time1 = time.time()
     gauss1_sol = genp.solve(A, b, False)
@@ -50,12 +55,10 @@ for size in range(16, 256):
     time2 = time.time()
     g2_times.append(time2-time1)
 
-    """
     time1 = time.time()
     gauss3_sol = gecp.solve(A, b, False)
     time2 = time.time()
     g3_times.append(time2-time1)
-    """
 
     time1 = time.time()
     sim_sol = sim.solve(A, b, eps)
@@ -67,33 +70,36 @@ for size in range(16, 256):
     time2 = time.time()
     sm_times.append(time2-time1)
 
+    time1 = time.time()
+    np_sol = np.linalg.solve(A, b)
+    time2 = time.time()
+    np_times.append(time2-time1)
+
     true_sol = np.linalg.solve(A, b)
     gauss1_error = np.absolute(true_sol) - np.absolute(gauss1_sol)
     gauss2_error = np.absolute(true_sol) - np.absolute(gauss2_sol)
-    # gauss3_error = np.absolute(true_sol) - np.absolute(gauss3_sol)
+    gauss3_error = np.absolute(true_sol) - np.absolute(gauss3_sol)
     sim_error = np.absolute(true_sol) - np.absolute(sim_sol[0])
     sm_error = np.absolute(true_sol) - np.absolute(sm_sol[0])
 
-    #print(A)
+    print('MATRIX SIZE = {0}'.format(size))
+    print(true_sol)
     print('the biggest error for Gaussian method '
           'w/o pivoting is: {0}'.format(np.amax(gauss1_error)))
     print('the biggest error for Gaussian method '
           'w/ partial pivoting is: {0}'.format(np.amax(gauss2_error)))
-
-    """
     print('the biggest error for Gaussian method '
           'w/ complete pivoting is: {0}'.format(np.amax(gauss3_error)))
-    """
-
     print('the biggest error for sim: {0}\n{1} iterations.'.format(np.amax(sim_error), sim_sol[1]))
     print('the biggest error for '
           ' Seidel method: {0}\n{1} iterations.\n\n\n'.format(np.amax(sm_error), sm_sol[1]))
 
-plt.plot(g1_times, label='Gauss w/o pivoting')
-plt.plot(g2_times, label='Gauss w/ partial pivoting')
-# plt.plot(g3_times, label='Gauss w/ complete pivoting')
+#plt.plot(g1_times, label='Gauss w/o pivoting')
+#plt.plot(g2_times, label='Gauss w/ partial pivoting')
+#plt.plot(g3_times, label='Gauss w/ complete pivoting')
 plt.plot(sim_times, label='simple iterations')
 plt.plot(sm_times, label='Seidel')
+plt.plot(np_times, label='numpy linalg solve')
 plt.legend()
 plt.show()
 

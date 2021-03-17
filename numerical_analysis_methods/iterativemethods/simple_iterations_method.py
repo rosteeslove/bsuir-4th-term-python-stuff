@@ -16,19 +16,19 @@ import base_method as bm
 def _iteration(B: np.array, x: np.array, c: np.array):
     """
     Completes one iteration of the method.
-    """
-    # The following line of code is removed to match the optimization
-    # level of Seidel method.  In other words this line is too fast
-    # but the desired outcome is to have sim iteration and Seidel
-    # iteration run in roughly the same time.
 
+    Remark: the desired outcome is to have sim iteration and Seidel
+    iteration run in roughly the same time.
+    """
+
+    # built-in methods:
     # return B @ x + c
 
+    # not built-in methods:
     new_x = c.copy()
 
     for i in range(len(B)):
-        for j in range(len(B)):
-            new_x[i] += B[i, j]*x[j]
+        new_x[i] += (B[i] * x).sum()
 
     return new_x
 

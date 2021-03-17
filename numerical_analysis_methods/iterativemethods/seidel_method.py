@@ -18,11 +18,9 @@ def _iteration(B: np.array, x: np.array, c: np.array):
     Completes one iteration of the method.
     """
     y = x.copy()
-
+    
     for i in range(len(B)):
-        y[i] = c[i]
-        for j in range(len(B)):
-            y[i] += B[i, j]*y[j]
+        y[i] = c[i] + (B[i] * y).sum()
 
     return y
 

@@ -4,7 +4,7 @@ import numpy as np
 
 
 MAX_ABS_VAL = 100
-DEFAULT_SPARSITY_COEFFICIENT = 0.9
+DEFAULT_SPARSITY_COEFFICIENT = 0.1
 
 random.seed(42)
 

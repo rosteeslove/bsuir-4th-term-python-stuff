@@ -17,7 +17,7 @@ import system_transform as st
 MAX_ITERATIONS_COUNT = 1_000_000
 
     
-def _metric_one_coefficient(B):
+def metric_one_coefficient(B):
     B = abs(B)
     row_sums = np.zeros(len(B))
 
@@ -27,7 +27,7 @@ def _metric_one_coefficient(B):
 
     return np.amax(row_sums)
 
-def _metric_two_coefficient(B):
+def metric_two_coefficient(B):
     B = abs(B)
     col_sums = np.zeros(len(B))
 
@@ -37,7 +37,7 @@ def _metric_two_coefficient(B):
 
     return np.amax(col_sums)
 
-def _metric_three_coefficient(B):
+def metric_three_coefficient(B):
     squares_sum = 0
 
     for i in range(len(B)):
@@ -63,15 +63,15 @@ def _choose_distance_metric(B):
     method depending on the chosen metric] or [None if the criteria
     of convergence is not met].
     """
-    alpha = _metric_one_coefficient(B)
+    alpha = metric_one_coefficient(B)
     if alpha < 1:
         return alpha, _metric_one_distance
 
-    alpha = _metric_two_coefficient(B)
+    alpha = metric_two_coefficient(B)
     if alpha < 1:
         return alpha, _metric_two_distance
 
-    alpha = _metric_three_coefficient(B)
+    alpha = metric_three_coefficient(B)
     if alpha < 1:
         return alpha, _metric_three_distance
 

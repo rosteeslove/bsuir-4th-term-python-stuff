@@ -33,7 +33,7 @@ def solve(A: np.array, b: np.array, interactive) -> np.array:
 
         # finding the element of the biggest absolute value
         # in the unprocessed submatrix of A:
-        the_i, the_j = _abs_max(A, i)
+        the_i, the_j = _abs_max_fast(A, i)
         if interactive:
             print('''Element {0}x{1} is of the biggest absolute value 
             in the unproccessed part of A-matrix.\n'''.format(the_i, the_j))
@@ -124,12 +124,11 @@ def _abs_max_fast(A: np.array, index):
     index-index element.
 
     Remark: optimized _abs_max.
-
-    TODO: refine
     """
 
     maxind = np.argmax(abs(A[index:, index:]))
-    return (index + maxind // (len(A) - index), index + maxind % (len(A) - index))
+    return ((index + maxind // (len(A) - index),
+             index + maxind % (len(A) - index)))
 
 
 def _eliminate(A: np.array, b: np.array, index):
