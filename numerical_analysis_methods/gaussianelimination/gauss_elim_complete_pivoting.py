@@ -128,7 +128,7 @@ def _abs_max_fast(A: np.array, index):
     TODO: refine
     """
 
-    maxind = numpy.argmax(abs(A[index:, index:]))
+    maxind = np.argmax(abs(A[index:, index:]))
     return (index + maxind // (len(A) - index), index + maxind % (len(A) - index))
 
 
