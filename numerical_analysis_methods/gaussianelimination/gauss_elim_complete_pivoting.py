@@ -125,13 +125,11 @@ def _abs_max_fast(A: np.array, index):
 
     Remark: optimized _abs_max.
 
-    TODO: fix
+    TODO: refine
     """
 
-    i, j = np.unravel_index(np.argmax(
-           np.absolute(A[index:, index:]), axis=None), 
-                            A.shape)
-    return index+i, index+j
+    maxind = numpy.argmax(abs(A[index:, index:]))
+    return (index + maxind // (len(A) - index), index + maxind % (len(A) - index))
 
 
 def _eliminate(A: np.array, b: np.array, index):
