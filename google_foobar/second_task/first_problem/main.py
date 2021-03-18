@@ -30,8 +30,7 @@ def solution2(src, dest):
     cur_row, cur_col = _translate_to_rc(src)
     dest_row, dest_col = _translate_to_rc(dest)
 
-    return num_sol.solution(CHESSBOARD_SIZE, CHESSBOARD_SIZE,
-                            cur_row, cur_col, dest_row, dest_col)
+    return None
 
 
 # 3:
@@ -63,16 +62,6 @@ def _translate_to_rc(pos_int):
 
 def main():
     print(*bfs.dist_map_bfs(CHESSBOARD_SIZE, CHESSBOARD_SIZE, 0, 0), sep='\n')
-    #print(num_sol.solution(CHESSBOARD_SIZE, CHESSBOARD_SIZE, 0, 0, 0, 6))
-
-    for i in range(6):
-        for j in range(6):
-            print('{0}'.format(num_sol.solution(CHESSBOARD_SIZE,
-                                                CHESSBOARD_SIZE,
-                                                0, 0,
-                                                i, j)), end=', ')
-        print('')
-
 
 
 if __name__ == "__main__":
