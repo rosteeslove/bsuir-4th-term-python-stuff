@@ -4,7 +4,7 @@ import arithmetic as arithm
 
 
 def main():
-
+    """
     # tests:
     for i in range(-128, 128):
         for j in range(-128, 128):
@@ -28,9 +28,64 @@ def main():
 
             if i != q*j + r:
                 print('error: {0}/{1} = {2} ({3})'.format(i, j, q, r))
+    """
 
-            if q != i // j or r != i % j:
-                print('error: {0}/{1} = {2} ({3})'.format(i, j, q, r))
+    # operations test:
+    print('Sum:\n')
+
+    a = int(input('\tFirst arg: '))
+    b = int(input('\tSecond arg: '))
+
+    a_str = bin_str_io.int_to_twos_comp_binary_string(a)
+    b_str = bin_str_io.int_to_twos_comp_binary_string(b)
+
+    print('First arg + second arg = {0}'.format(
+        bin_str_io.twos_comp_binary_string_to_int(basic.sum(a_str, 
+                                                            b_str, 
+                                                            True))))
+
+
+    print('Difference:\n')
+
+    a = int(input('\tFirst arg: '))
+    b = int(input('\tSecond arg: '))
+
+    a_str = bin_str_io.int_to_twos_comp_binary_string(a)
+    b_str = bin_str_io.int_to_twos_comp_binary_string(b)
+
+    print('First arg - second arg = {0}'.format(
+        bin_str_io.twos_comp_binary_string_to_int(arithm.dif(a_str, 
+                                                           b_str, 
+                                                           True))))
+
+
+    print('Multiplication:\n')
+
+    a = int(input('\tFirst arg: '))
+    b = int(input('\tSecond arg: '))
+
+    a_str = bin_str_io.int_to_twos_comp_binary_string(a)
+    b_str = bin_str_io.int_to_twos_comp_binary_string(b)
+
+    print('First arg * second arg = {0}'.format(
+        bin_str_io.twos_comp_binary_string_to_int(arithm.imul(a_str, 
+                                                            b_str, 
+                                                            True))))
+
+
+    print('Division:\n')
+
+    a = int(input('\tFirst arg: '))
+    b = int(input('\tSecond arg: '))
+
+    a_str = bin_str_io.int_to_twos_comp_binary_string(a)
+    b_str = bin_str_io.int_to_twos_comp_binary_string(b)
+
+    div_res = arithm.idiv(a_str, b_str, True)
+    print(('First arg / second arg = {0}\n'
+           r'First arg % second = {1}').format(
+               bin_str_io.twos_comp_binary_string_to_int(div_res[0]),
+               bin_str_io.twos_comp_binary_string_to_int(div_res[1])))
   
 
 if __name__ == "__main__":

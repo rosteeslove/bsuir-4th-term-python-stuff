@@ -6,7 +6,7 @@ This module contains the isolate_roots method for polynomials only.
 import sturms_method as sm
 
 
-MIN_RADIUS = 0.01
+MIN_RADIUS = 0.001
 
 
 def _iteration(sturms_seq, left, right):

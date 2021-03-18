@@ -24,7 +24,7 @@ def _align(a, b):
     return a, b
 
 
-def dif(a, b):
+def dif(a, b, output=False):
     """
     Returns the difference between a-arg and b-arg 2s-complement 
     binary strings as well as the overflow bool.
@@ -33,6 +33,10 @@ def dif(a, b):
     a, b = _align(a, b)
 
     b = basic.neg(b)
+
+    if output:
+        print(b)
+        print('')
 
     return basic.sum(a, b)
 
@@ -75,7 +79,7 @@ def full_mul(a, b):
     return p
 
 
-def imul(m, r):
+def imul(m, r, output=False):
     """
     Returns the product of m-arg and r-arg interpreting them as 2s-complement 
     binary strings.
@@ -84,10 +88,11 @@ def imul(m, r):
     (https://en.wikipedia.org/wiki/Booth%27s_multiplication_algorithm).
     """
 
-    if m == basic.neg(m):
-        tmp = m
-        m = r
-        r = tmp
+    if output:
+        print('m: {0}'.format(m))
+        print('r: {0}\n'.format(r))
+
+    m = m[0] + m
 
     x = len(m)
     y = len(r)
@@ -95,6 +100,11 @@ def imul(m, r):
     A = m + (y+1)*'0'
     S = basic.neg(m) + (y+1)*'0'
     P = x*'0' + r + '0'
+
+    if output:
+        print('A: {0}'.format(A))
+        print('S: {0}'.format(S))
+        print('P: {0}\n'.format(P))
 
     for _ in range(y):
         two_last_bits_of_p = P[-2:]
@@ -106,20 +116,34 @@ def imul(m, r):
 
         P = basic.arithmetic_shift_right(P)
 
+        if output:
+            print('A: {0}'.format(A))
+            print('S: {0}'.format(S))
+            print('P: {0}\n'.format(P))
+
     return P[:-1]
 
 
-def idiv(a, b):
+def idiv(a, b, output=False):
     """
     Returns tuple of quotient and remainder of a-arg / b-arg.
 
     Remark: a-arg and b-arg are 2s-complement binary strings.
     """
 
+    if output:
+        print('a: {0}'.format(a))
+        print('b: {0}\n'.format(b))
+
     a, b = _align(a, b)
     M = b
     AQ = basic.translate(a, len(a)*2)
     A, Q = AQ[:len(a)], AQ[-len(a):]
+
+    if output:
+            print('A: {0}'.format(A))
+            print('Q: {0}'.format(Q))
+            print('M: {0}\n'.format(M))
 
     for _ in range(len(a)):
         AQ = basic.shift_left(A + Q)
@@ -136,6 +160,11 @@ def idiv(a, b):
         else:
             Q = Q[:-1] + '0'
             A = old_A
+
+        if output:
+            print('A: {0}'.format(A))
+            print('S: {0}'.format(Q))
+            print('P: {0}\n'.format(M))
 
     r = A
     q = Q if a[0] == b[0] else basic.neg(Q)

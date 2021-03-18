@@ -2,10 +2,12 @@
 This module contains the isolate_roots method for root isolation
 for any function.  The method iterates the main interval with the
 same step to find intervals in which the function crosses the x-axis.
+
+Ремарка: табличный метод короче.
 """
 
 
-DEFAULT_STEP = 0.01
+DEFAULT_STEP = 0.000001
 
 
 def isolate_roots(f, left, right):

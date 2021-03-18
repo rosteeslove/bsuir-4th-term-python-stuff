@@ -25,10 +25,15 @@ to avoid any overflows.
 import itertools
 
 
-def sum(a, b):
+def sum(a, b, output=False):
     """
     Returns sum of a and b as well as the overflow bool.
     """
+
+    if output:
+        print(a)
+        print(b)
+        print('')
 
     c = ''
     extra_bit = False
@@ -43,6 +48,11 @@ def sum(a, b):
                 extra_bit = True
         else:
             c = (a_bit if a_bit is not None else '0') + c
+
+        if output:
+            print(c)
+            print('')
+
 
     return c
 

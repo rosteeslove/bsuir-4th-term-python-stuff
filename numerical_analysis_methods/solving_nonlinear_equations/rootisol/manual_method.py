@@ -1,6 +1,8 @@
 """
 This module contains the get_root_intervals_from_user method
 for root isolation.
+
+Remark: this is kind of dumb.
 """
 
 
@@ -44,11 +46,11 @@ def get_root_intervals_from_user(f, left, right):
     print("Enter intervals' borders:\n")
     intervals = []
     while True:
-        print('Define the interval:')
-        left = _get_float('Enter the left border: ')
+        print('\tDefine the interval:')
+        left = _get_float('\t\tEnter the left border: ')
         if left is None:
             break
-        right = _get_float('Enter the right border: ')
+        right = _get_float('\t\tEnter the right border: ')
         if right is None:
             break
         print('\n')

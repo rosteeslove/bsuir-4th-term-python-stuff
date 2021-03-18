@@ -8,7 +8,7 @@ python integer-type variables and binary strings of some bit number.
 import basic_operations as basic
 
 
-def int_to_twos_comp_binary_string(n, bits = 8):
+def int_to_twos_comp_binary_string(n, bits = 16):
     """
     Returns 2s-complement binary string of the n-arg's value and 
     bits-arg bits.
