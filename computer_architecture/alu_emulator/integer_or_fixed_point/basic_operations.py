@@ -1,67 +1,82 @@
 """
 Summary:
-This module contains methods implementing basic operations for working with 
-binary strings of some fixed bit size* like ALU does.
+This module contains methods implementing basic operations
+for working with binary strings (binstrings)
+of some fixed bit size like ALU does.
 
 The methods are:
 - sum
 - invert_bits
 - neg
-- translate
+- expand_to_len
 - shift_left
 - logical_shift_right
 - arithmetic_shift_right
 
-Remarks:
-* the bit size is not exactly fixed but the framework is provided to work
-with the binary strings keeping their length constant to emulate 
-the registers.
-
-The whole system is flexible though and can be configured 
-to avoid any overflows.
+TODO: move this module and bsio to alu_emulator directory somehow.
 """
 
 
-import itertools
+import binary_string_io as bsio
 
 
-def sum(a, b, output=False):
+def sum(a, b, rus_output=False):
     """
-    Returns sum of a and b as well as the overflow bool.
+    Return sum of a and b binstrings and the overflow bool.
     """
+    bigger_len = len(a) if len(a) > len(b) else len(b)
+    a = expand_to_len(a, bigger_len)
+    b = expand_to_len(b, bigger_len)
 
-    if output:
-        print(a)
-        print(b)
-        print('')
+    if rus_output:
+        print(('Считаем сумму следующих чисел в прямом коде:\n'
+              '{0}(2) = {1}(10)\n'
+              '{2}(2) = {3}(10)\n'
+              ).format(a, bsio.binstring_to_int(a),
+                       b, bsio.binstring_to_int(b)))
+        print('| A | B | (e) | -> | S | (e) |\n' + '-'*34)
 
     c = ''
     extra_bit = False
+    for a_bit, b_bit in zip(reversed(a), reversed(b)):
+        old_extra_bit = extra_bit
 
-    for a_bit, b_bit in itertools.zip_longest(reversed(a), reversed(b)):
         if bool(b_bit == '1') != extra_bit:
-            if a_bit == '0' or a_bit is None:
+            if a_bit == '0':
                 c = '1' + c
                 extra_bit = False
             else:
                 c = '0' + c
                 extra_bit = True
         else:
-            c = (a_bit if a_bit is not None else '0') + c
+            c = a_bit + c
 
-        if output:
-            print(c)
-            print('')
+        if rus_output:
+            print(('| {0} | {1} | ({2}) | -> | {3} | ({4}) |'
+                  ).format(a_bit, b_bit,
+                           '1' if old_extra_bit else '0',
+                           c[0],
+                           '1' if extra_bit else '0'))
 
+    if rus_output:
+        print(('\nРезультат суммы в прямом коде:\n'
+               'a + b = c\n'
+               'a = {0}(2) = {1}(10)\n'
+               'b = {2}(2) = {3}(10)\n'
+               'c = {4}(2) = {5}(10)\n'
+               'Переполнение для прямого кода '
+               + ('есть' if extra_bit else 'отсутствует') + '.'
+              ).format(a, bsio.binstring_to_int(a),
+                       b, bsio.binstring_to_int(b),
+                       c, bsio.binstring_to_int(c)))
 
-    return c
+    return c, extra_bit
 
 
 def invert_bits(a):
     """
-    Returns inverted a-arg binary string. 
+    Return inverted a-arg binary string. 
     """
-
     b = ''
     for c in a:
         b += '1' if c == '0' else '0'
@@ -69,54 +84,34 @@ def invert_bits(a):
     return b
 
 
-def neg(a, exact = False):
+def neg(a):
     """
-    Returns minus a-arg interpreting it as a 2s-complement binary string.
-    
-    If exact-arg is True then the result is exact 
-    i.e. 0b1000 would neg into 0b01000 and not 0b1000 if the string size is 4.
+    Return minus a-arg interpreting it
+    as a 2s-complement binary string and return the error bool
+    (True if there's an error).
     """
-    
     b = invert_bits(a)
-    d = sum(b, '01')
+    d = sum(b, '01')[0]
 
-    if exact and a == d:
-        return '0' + d
+    if a == d:
+        return d, True
     else:
-        return d
+        return d, False
+    
 
-
-def translate(a, bits):
+def expand_to_len(a, new_len):
     """
-    Returns a-arg binary string translated into the one of bits-arg bits.
-
-    Warning: if bits-arg's value is less than a-arg's length 
-    data might be lost.
-
-    To be used mainly to align binary strings when needed.
+    Return a expanded to new length.
     """
+    assert new_len >= len(a)
 
-    pos = True
-    if a[0] == '1':
-        pos = False
-        a = neg(a, True)
-
-    if bits <= len(a):
-        a = a[-bits:]
-    else:
-        a = '0'*(bits - len(a)) + a
-
-    if not pos:
-        a = neg(a)
-
-    return a
+    return a[0]*(new_len-len(a)) + a
 
 
 def shift_left(a, shift = 1):
     """
-    Returns a-arg binary string shifted left by shift-arg bits.
+    Return a-arg binary string shifted left by shift-arg bits.
     """
-
     for _ in range(shift):
         a = a[1:] + '0'
 
@@ -125,9 +120,9 @@ def shift_left(a, shift = 1):
 
 def logical_shift_right(a, shift = 1):
     """
-    Returns a-arg binary string logically shifted right by shift-arg bits.
+    Return a-arg binary string
+    logically shifted right by shift-arg bits.
     """
-
     for _ in range(shift):
         a = '0' + a[:-1]
 
@@ -136,7 +131,8 @@ def logical_shift_right(a, shift = 1):
 
 def arithmetic_shift_right(a, shift = 1):
     """
-    Returns a-arg binary string arithmetically shifted right by shift-arg bits.
+    Return a-arg binary string
+    arithmetically shifted right by shift-arg bits.
     """
 
     for _ in range(shift):

@@ -4,6 +4,8 @@ to solve the knight problem [with reduced input set]*
 with O(1) time complexity.
 
 * in case of the original problem meaning for all posiible cases
+
+TODO: fix bc it's not exactly right.
 """
 
 import bfs
