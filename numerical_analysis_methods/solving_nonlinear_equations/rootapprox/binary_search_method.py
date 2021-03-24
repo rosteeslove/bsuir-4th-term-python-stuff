@@ -1,33 +1,32 @@
-MAX_ITERATION_COUNT = 1024
-MIN_EPS = 0.000000000001
+"""
+This module contains the calculate_root method to find function f's
+root on (a, b) interval using binary search algorithm.
+"""
 
-def _middle(left, right):
-    return (left+right) / 2
+
+MAX_ITERATION_COUNT = 1_000_000
 
 
-def calculate_root(f, left, right, eps):
+def calculate_root(f, a, b, eps):
     """
     Return root (assuming there's one) of f function
-    on the [left, right] interval using binary search algorithm
+    on the (a, b) interval using binary search algorithm
     and also return number of iterations.
     """
-    assert f(left)*f(right) <= 0
+    assert f(a)*f(b) < 0
 
-    if f(left) == 0:
-        return left
-    if f(right) == 0:
-        return right
+    def middle(a, b):
+        return (a+b) / 2
 
     iter_count = 0
-    middle = _middle(left, right)
-    while (abs(right-left) > eps
-           and iter_count < MAX_ITERATION_COUNT
-           and right-left > MIN_EPS):
-        if f(middle)*f(left) > 0:
-            left = middle
+    middle = middle(a, b)
+    while (abs(b-a) > eps
+           and iter_count < MAX_ITERATION_COUNT):
+        if f(middle)*f(a) > 0:
+            a = middle
         else:
-            right = middle
-        middle = _middle(left, right)
+            b = middle
+        middle = middle(a, b)
         iter_count += 1
 
     return middle, iter_count

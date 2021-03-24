@@ -1,17 +1,31 @@
+"""
+This module contains the calculate_root method to find function f's
+root on (a, b) interval using secant method.
+"""
+
+
 import numpy as np
 
-# метод хорд
 
-def CalculateRoot(f, l, r, f_delta):
-    assert f(l)*f(r) < 0
-    # TODO: add assert to check derivatives' behavior
+MAX_ITERATION_COUNT = 1_000_000
 
-    if f(l) > 0:
+
+def calculate_root(f, a, b, eps):
+    """
+    Return root (assuming there's one) of f function
+    on the (a, b) interval using secant method
+    and also return number of iterations.
+
+    f's first two derivatives should be differentiable.
+    """
+    assert f(a)*f(b) < 0
+
+    if f(a) > 0:
         f = -f
 
     while True:
-        l += (r - l) / (f(r) - f(l)) * abs(f(l))
-        if abs(f(l)) < f_delta:
+        a += (b - a) / (f(b) - f(a)) * abs(f(a))
+        if abs(f(a)) < eps:
             break
 
     return l
