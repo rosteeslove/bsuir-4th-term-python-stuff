@@ -20,15 +20,15 @@ TYPES:
 
 The type to be implemented is the 32 bit one.
 
-METHODS TO IMPLEMENT:
+THINGS TO IMPLEMENT:
 
- PROPERTIES(?):
+ PROPERTIES:
  + exponent (get the exponent 8-bit binstring)
  + mantissa_binary (get the mantissa 23-bit binstring)
  + mantissa (get the true mantissa 24-bit binstring)
- - (sign could be retrieved using number[0])
+ + sign_bit
 
- IO BETWEEN MY TYPE AND THE ORIGINAL TYPE::
+ IO BETWEEN MY TYPE AND THE ORIGINAL TYPE:
  + np.float32 -> my Float
  + my Float -> np.float32
 
@@ -37,6 +37,7 @@ METHODS TO IMPLEMENT:
  + is_infinity
  + is_nan
  + is_normal
+ + is_denormal
 
  COMPARISON OPERATORS:
  + ==
@@ -78,6 +79,8 @@ EXPONENT_BIT_COUNT = 8
 
 class Float:
 
+    # io methods for this type <-> np.float32 conversion:
+
     @staticmethod
     def float_to_bin(num):
         """
@@ -95,8 +98,55 @@ class Float:
         f = int(b, 2)
         return np.float32(struct.unpack('f', struct.pack('I', f))[0])
 
+    @staticmethod
+    def pos_infinity():
+        """
+        Return positive infinity instance of the Float type.
+        """
+        return Float(float('inf'))
+
+    @staticmethod
+    def neg_infinity():
+        """
+        Return negative infinity instance of the Float type.
+        """
+        return Float(float('-inf'))
+
+    @staticmethod
+    def nan():
+        """
+        Return NaN instance of Float type.
+        """
+        return Float(float('nan'))
+
+    # standart methods for classes:
+
     def __init__(self, num: float):
         self.binary = self.float_to_bin(num)
+
+    def __str__(self):
+        """
+        Return classical decimal string representation of float.
+        """
+        return str(self.bin_to_float(self.binary))
+
+    # properties:
+
+    @property
+    def sign_bit(self):
+        """
+        Return '0' if the number is positive, '1' otherwise.
+        """
+        return self.binary[0]
+
+    @sign_bit.setter
+    def sign_bit(self, value: str):
+        """
+        Set the number's sign bit.
+        """
+        assert binstrings.is_valid(value) and len(value) == 1
+
+        self.binary = value + self.binary[1:]
 
     @property
     def exponent(self):
@@ -112,7 +162,7 @@ class Float:
         """
         assert binstrings.is_valid(value) and len(value) == EXPONENT_BIT_COUNT
 
-        self.binary = self.binary[0] + value + self.mantissa_binary
+        self.binary = self.sign_bit + value + self.mantissa_binary
 
     @property
     def mantissa_binary(self):
@@ -128,7 +178,7 @@ class Float:
         """
         assert binstrings.is_valid(value) and len(value) == MANTISSA_BIT_COUNT
 
-        self.binary = self.binary[0] + self.exponent + value
+        self.binary = self.sign_bit + self.exponent + value
 
     @property
     def mantissa(self):
@@ -137,6 +187,8 @@ class Float:
         the implicit bit in the beginning.
         """
         return ('0' if self.is_denormal() else '1') + self.mantissa_binary
+
+    # is_*whatever* methods:
 
     def is_zero(self):
         """
@@ -171,7 +223,9 @@ class Float:
         False otherwise.
         """
         return (set(self.exponent) == set('0')
-                and set(self.mantissa_binary) == set('0', '1'))
+                and set(self.mantissa_binary) == set('01'))
+
+    # comparison operators:
 
     def __eq__(self, other):
         """
@@ -189,7 +243,7 @@ class Float:
             return True
 
         if self.is_infinity() and other.is_infinity():
-            return self.binary[0] == other.binary[0]
+            return self.sign_bit == other.sign_bit
 
         return False
 
@@ -205,18 +259,23 @@ class Float:
 
         (to be tested #1)
         """
+        if self.is_nan() or other.is_nan():
+            return False
+
+        if self.is_zero() and other.is_zero():
+            return False
+            
         # compare by signs:
-        if self.binary[0] != other.binary[0]:
-            return self.binary[0] == '0'
+        if self.sign_bit != other.sign_bit:
+            return self.sign_bit == '0'
 
-        # compare by value for positives:
-        if self.binary[0] == '0':
-            return binstrings.first_is_bigger(self.binary[1:],
-                                              other.binary[1:])
-
-        # compare by value for negatives:
-        return binstrings.first_is_bigger(other.binary[1:],
-                                          self.binary[1:])
+        # compare by value for positives/ negatives:
+        if self.sign_bit == '0':
+            return binstrings.first_is_bigger(self.abs().binary,
+                                              other.abs().binary)
+        else:
+            return binstrings.first_is_bigger(other.abs().binary,
+                                              self.abs().binary)
         
     def __ge__(self, other):
         """
@@ -228,97 +287,164 @@ class Float:
         """
         Return True if self < other, False otherwise.
         """
-        return not self >= other
+        if self.is_nan() or other.is_nan():
+            return False
+
+        return not (self >= other)
 
     def __le__(self, other):
         """
         Return True if self <= other, False otherwise.
         """
-        return not self > other
+        if self.is_nan() or other.is_nan():
+            return False
+            
+        return not (self > other)
+
+    # unary arithmetic operators:
 
     def __neg__(self):
         """
         Return number with the opposite sign.
-
-        (not tested but I'm pretty sure this works)
         """
-        bin_list = list(self.binary)
-        bin_list[0] = '0' if bin_list[0] == '1' else '1'
-        self.binary = ''.join(bin_list)
+        negged = deepcopy(self)
+        negged.sign_bit = '1' if (negged.sign_bit == '0') else '0'
+        return negged
+
+    def abs(self):
+        """
+        Return the absolute value of the number.
+        """
+        abs_val = deepcopy(self)
+        abs_val.sign_bit = '0'
+        return abs_val
+
+    # binary arithmetic operators:
 
     def __add__(self, other):
         """
         Return sum of two Floats.
 
-        (a draft; not tested)
+        (works for positive numbers in [0, 1] interval)
         """
-        self = deepcopy(self)
-        other = deepcopy(other)
-        # now self and other can be modified.
+        # step 1 (account for special cases):
 
+        # a. NaNs:
+        if self.is_nan() or other.is_nan():
+            return Float(float('nan'))
+
+        # b. two infinities:
+        if self.is_infinity() and other.is_infinity():
+            if self.sign_bit != other.sign_bit:
+                return self.nan
+            else:
+                return deepcopy(self)
+        
+        # c. one infinity:
+        if self.is_infinity():
+            return deepcopy(self)
+        elif other.is_infinity():
+            return deepcopy(other)
+
+        # d. one or two zeros:
         if self.is_zero():
-            return other
+            return deepcopy(other)
         elif other.is_zero():
-            return self
+            return deepcopy(self)
 
-        bigger, smaller = (self, other) if (self >= other) else (other, self)
+        # at this point any of the two arguments is
+        # either normal or denormal
+        # step 2: deconstructing arguments' binaries:
 
-        # aligning the exponents
-        while binstrings.first_is_bigger(bigger.exponent, smaller.exponent):
+        bigger, smaller = (self, other) if (self.abs() >= other.abs()) else (other, self)
+
+        biggers_sign = bigger.sign_bit
+        smallers_sign = smaller.sign_bit
+
+        biggers_exponent = bigger.exponent
+        smallers_exponent = smaller.exponent
+        
+        biggers_mantissa = bigger.mantissa
+        smallers_mantissa = smaller.mantissa
+
+        # step 3: aligning the exponents:
+
+        while biggers_exponent != smallers_exponent:
             # incrementing exponent of the smaller number and shifting
             # its mantissa to the right.
-            smaller.exponent = basic.sum(smaller.exponent, '01')[0]
-            smaller.mantissa_binary = basic.logical_shift_right(
-                smaller.mantissa_binary)
+            smallers_exponent = basic.sum(smallers_exponent, '01')[0]
+            smallers_mantissa = basic.logical_shift_right(
+                                    smallers_mantissa)
 
             # if mantissa of the smaller one goes zero, return
-            # the bigger operand.
-            if binstrings.is_zero(smaller.mantissa_binary):
-                return bigger
+            # the bigger operand copy.
+            if binstrings.is_zero(smallers_mantissa):
+                return deepcopy(bigger)
 
-        # summing mantissas (assuming we are summing 23-bit mantissas)
-        # TODO: don't assume
-        mantissa_one = (bigger.mantissa_binary if bigger.binary[0] == '0'
-                        else basic.invert_bits(bigger.mantissa_binary))
-        mantissa_two = (smaller.mantissa_binary if smaller.binary[0] == '0'
-                        else basic.invert_bits(smaller.mantissa_binary))
+        # step 4: getting mantissas' sum and setting up
+        # sum's sign, exponent and mantissa:
+        bg_signed_mantissa = (biggers_mantissa if biggers_sign == '0'
+                              else basic.invert_bits(biggers_mantissa))
+        sm_signed_mantissa = (smallers_mantissa if smallers_sign == '0'
+                              else basic.invert_bits(smallers_mantissa))
 
-        sum_sign = bigger.binary[0]
-        sum_exponent = bigger.exponent
-        sum_mantissa = basic.sum(mantissa_one, mantissa_two)
+        sum_sign = biggers_sign
+        sum_exponent = biggers_exponent
+        sum_mantissa = basic.sum(bg_signed_mantissa, sm_signed_mantissa)
 
-        # if mantissas' sum goes zero we are to return zero.
-        if binstrings.is_zero(sum_mantissa[0]):
-            # create zero Float and return it
-            # TODO: create zero the normal way
-            zero = deepcopy(bigger)
-            zero.binary = '0'*TOTAL_BIT_COUNT
-            return zero
+        # in case arguments have different signs and
+        # sum's mantissa is zero return zero Float.
+        if (binstrings.is_zero(sum_mantissa[0])
+                and biggers_sign != smallers_sign):
+            return Float(0.)
 
-        # if mantissas' sum isn't zero but the mantissa_sum binstring
-        # is overflowed ...
-        if sum_mantissa[1]:
-            mantissa_two = basic.logical_shift_right(mantissa_two)
-            sum_mantissa = basic.sum(mantissa_one, mantissa_two)
+        # in case sum's mantissa is too big, shift it to fit.
+        if (sum_mantissa[1]):
+            sum_mantissa = '1' + sum_mantissa[0][:-1]
             sum_exponent = basic.sum(sum_exponent, '01')
 
-            # check if exponent is overflowed
+            # check if exponent overflowed.
+            # if it did, return signed infinity as sum.
             if sum_exponent[1]:
-                raise Exception # TODO: actually return infinity
+                if sum_sign == '0':
+                    return Float(float('inf'))
+                else:
+                    return Float(float('-inf'))
+            else:
+                sum_exponent = sum_exponent[0]
+        else:
+            sum_mantissa = sum_mantissa[0] # implicit 24-bit mantissa
 
-        sum_mantissa = sum_mantissa[0]
-        sum_exponent = sum_exponent[0]
+        # step 5: normalize the number if possible.
+        while sum_mantissa[0] == '0':
+            sum_mantissa = basic.shift_left(sum_mantissa)
+            # decrementing exponent:
+            sum_exponent = basic.sum(sum_exponent, '10')[0]
 
-        bigger.binary = sum_sign + sum_exponent + sum_mantissa
-        return bigger
+            if sum_exponent == '0'*EXPONENT_BIT_COUNT:
+                break
+
+        # TODO: do this the normal way.
+        sum_binary = sum_sign + sum_exponent + sum_mantissa[1:]
+        sum_float = deepcopy(self)
+        sum_float.binary = sum_binary
+        return sum_float
 
     def __sub__(self, other):
         """
-        Return sum of two Floats.
-
-        (a draft; not tested)
+        Return difference of two Floats.
         """
         return self + (-other)
 
+    def __mul__(self, other):
+        """
+        Return product of two Floats.
+        """
+        raise NotImplementedError
 
+    def __truediv__(self, other):
+        """
+        Return quotient of two Floats.
+        """
+        raise NotImplementedError
     
