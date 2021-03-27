@@ -23,10 +23,10 @@ The type to be implemented is the 32 bit one.
 THINGS TO IMPLEMENT:
 
  PROPERTIES:
- + exponent (get the exponent 8-bit binstring)
- + mantissa_binary (get the mantissa 23-bit binstring)
+ + exponent (get&set the exponent 8-bit binstring)
+ + mantissa_binary (get&set the mantissa 23-bit binstring)
  + mantissa (get the true mantissa 24-bit binstring)
- + sign_bit
+ + sign_bit (get&set)
 
  IO BETWEEN MY TYPE AND THE ORIGINAL TYPE:
  + np.float32 -> my Float
@@ -70,6 +70,7 @@ import struct
 
 import binstrings
 import basic_operations as basic
+import arithmetic as arth
 
 
 TOTAL_BIT_COUNT = 32
@@ -325,7 +326,9 @@ class Float:
         """
         Return sum of two Floats.
 
-        (works for positive numbers in [0, 1] interval)
+        (works for random big and small pos and neg floats;
+         to be tested w/ special cases;
+         1 bit error sometimes - dunno why)
         """
         # step 1 (account for special cases):
 
@@ -433,8 +436,77 @@ class Float:
     def __mul__(self, other):
         """
         Return product of two Floats.
+
+        (a draft; seems to be working with 1 bit error)
         """
-        raise NotImplementedError
+
+        # step 1: account for special cases.
+        # i.e. nans present -> nan
+        #      zeros present -> zeros
+        #      infs present -> signed inf
+        #
+        #     but also (this overrides what's above):
+        #       inf * zero -> nan
+
+        # TODO: implement what's above
+
+        # interstep: setup.
+
+        sign_one = self.sign_bit
+        exponent_one = self.exponent
+        mantissa_one = self.mantissa
+
+        sign_two = other.sign_bit
+        exponent_two = other.exponent
+        mantissa_two = other.mantissa
+
+        prod_sign = '0' if sign_one == sign_two else '1'
+
+        # step 2: get exponents' sum.
+        # 2a: get it:
+
+        exponent_sum = basic.sum(exponent_one, exponent_two)
+        exponent_sum = ('0'
+                        + ('1' if exponent_sum[1] else '0')
+                        + exponent_sum[0])
+        exponent_sum = basic.sum(exponent_sum, '01')[0]
+        exponent_sum = arth.dif(exponent_sum,
+                                '0' + '1'*(EXPONENT_BIT_COUNT - 1))[0]
+
+        # 2b: check the overflow or the underflow or whatever.
+        #     (just whether exponents' sum fits in 8 bits)
+
+        if set(exponent_sum[:2]) != set('0'):
+            return (self.pos_infinity()
+                    if (prod_sign == '0')
+                    else self.neg_infinity())
+
+        prod_exponent = exponent_sum[2:]
+
+        # step 3: get mantissas' 48-bit product.
+
+        # the following line is a bit crappy but it works as it should.
+        prod_mantissa = arth.imul('0'+mantissa_one, '0'+mantissa_two)[2:]
+
+        # step 4: normalize the result.
+        # (if during normalization exponent goes zero, break the loop)
+
+        while prod_mantissa[0] == '0':
+            prod_mantissa = basic.shift_left(prod_mantissa)
+            # decrementing exponent:
+            prod_exponent = basic.sum(prod_exponent, '11')[0]
+
+            if prod_exponent == '0'*EXPONENT_BIT_COUNT:
+                break
+
+        prod_mantissa = prod_mantissa[:(MANTISSA_BIT_COUNT + 1)]
+
+        # finally return the result.
+        prod_binary = prod_sign + prod_exponent + prod_mantissa[1:]
+        prod = deepcopy(self)
+        prod.binary = prod_binary
+
+        return prod
 
     def __truediv__(self, other):
         """
