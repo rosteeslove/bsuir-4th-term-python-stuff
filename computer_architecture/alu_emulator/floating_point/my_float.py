@@ -383,43 +383,37 @@ class Float:
 
         # step 4: getting mantissas' sum and setting up
         # sum's sign, exponent and mantissa:
-        bg_signed_mantissa = (biggers_mantissa if biggers_sign == '0'
-                              else basic.invert_bits(biggers_mantissa))
-        sm_signed_mantissa = (smallers_mantissa if smallers_sign == '0'
-                              else basic.invert_bits(smallers_mantissa))
 
         sum_sign = biggers_sign
         sum_exponent = biggers_exponent
-        sum_mantissa = basic.sum(bg_signed_mantissa, sm_signed_mantissa)
+        sum_mantissa = (basic.sum(biggers_mantissa, smallers_mantissa)
+                        if biggers_sign == smallers_sign
+                        else basic.oc_sum(biggers_mantissa,
+                                basic.invert_bits(smallers_mantissa)))
 
-        # in case arguments have different signs and
-        # sum's mantissa is zero return zero Float.
-        if (binstrings.is_zero(sum_mantissa[0])
-                and biggers_sign != smallers_sign):
-            return Float(0.)
+        # shifting mantissa to fit if neccesary:
+        if type(sum_mantissa) is tuple:
+            if sum_mantissa[1]:
+                sum_mantissa = '1' + sum_mantissa[0][:-1]
+                sum_exponent = basic.sum(sum_exponent, '01')[0]
 
-        # in case sum's mantissa is too big, shift it to fit.
-        if (sum_mantissa[1]):
-            sum_mantissa = '1' + sum_mantissa[0][:-1]
-            sum_exponent = basic.sum(sum_exponent, '01')
-
-            # check if exponent overflowed.
-            # if it did, return signed infinity as sum.
-            if sum_exponent[1]:
-                if sum_sign == '0':
-                    return Float(float('inf'))
-                else:
-                    return Float(float('-inf'))
+                # if exponent overflows, return infinity:
+                if sum_exponent == '1'*EXPONENT_BIT_COUNT:
+                    return (Float(float('inf'))
+                            if sum_sign == '0'
+                            else Float(float('-inf')))
             else:
-                sum_exponent = sum_exponent[0]
-        else:
-            sum_mantissa = sum_mantissa[0] # implicit 24-bit mantissa
+                sum_mantissa = sum_mantissa[0]
+
+        # in case sum's mantissa is zero return zero Float.
+        if (binstrings.is_zero(sum_mantissa)):
+            return Float(0.)
 
         # step 5: normalize the number if possible.
         while sum_mantissa[0] == '0':
             sum_mantissa = basic.shift_left(sum_mantissa)
             # decrementing exponent:
-            sum_exponent = basic.sum(sum_exponent, '10')[0]
+            sum_exponent = basic.sum(sum_exponent, '11')[0]
 
             if sum_exponent == '0'*EXPONENT_BIT_COUNT:
                 break

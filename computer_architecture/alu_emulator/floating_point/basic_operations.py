@@ -73,6 +73,29 @@ def sum(a, b, rus_output=False):
     return c, extra_bit
 
 
+def oc_sum(a, b):
+    """
+    Return one's complement sum of a and b.
+    """
+    s = sum(a, b)
+    if s[1]:
+        return sum(s[0], '01')[0]
+    else:
+        return s[0]
+
+
+def oc_dif(a, b):
+    """
+    Return one's complement difference of a and b.
+    """
+    b = invert_bits(b)
+    s = sum(a, b)
+    if s[1]:
+        return sum(s[0], '01')[0]
+    else:
+        return invert_bits(s[0])
+
+
 def invert_bits(a):
     """
     Return inverted a-arg binary string. 
