@@ -100,6 +100,20 @@ class Float:
         return np.float32(struct.unpack('f', struct.pack('I', f))[0])
 
     @staticmethod
+    def pos_zero():
+        """
+        Return positive zero instance of the Float type.
+        """
+        return Float(0.)
+
+    @staticmethod
+    def neg_zero():
+        """
+        Return negative zero instance of the Float type.
+        """
+        return Float(-0.)
+
+    @staticmethod
     def pos_infinity():
         """
         Return positive infinity instance of the Float type.
@@ -448,7 +462,7 @@ class Float:
         #     but also (this overrides what's above):
         #       inf * zero -> nan
 
-        # TODO: implement what's above
+        # TODO: step 1.
 
         # interstep: setup.
 
@@ -491,13 +505,11 @@ class Float:
         # step 4: normalize the result.
         # (if during normalization exponent goes zero, break the loop)
 
-        while prod_mantissa[0] == '0':
+        while (prod_mantissa[0] == '0'
+               and prod_exponent != '0'*EXPONENT_BIT_COUNT):
             prod_mantissa = basic.shift_left(prod_mantissa)
             # decrementing exponent:
             prod_exponent = basic.sum(prod_exponent, '11')[0]
-
-            if prod_exponent == '0'*EXPONENT_BIT_COUNT:
-                break
 
         prod_mantissa = prod_mantissa[:(MANTISSA_BIT_COUNT + 1)]
 
@@ -511,6 +523,72 @@ class Float:
     def __truediv__(self, other):
         """
         Return quotient of two Floats.
+
+        (a draft; seems to be working with 2 bit error)
+
+        NOTE: denormal numbers are processed as zeros for now.
+              this could be changed but meh.
         """
-        raise NotImplementedError
+        
+        # step 1: account for special cases.
+        # (zero implies zero or denormal rn)
+        # i.e. divisor is zero -> error
+        #      nans present -> nan
+        #      inf / inf -> nan
+        #      num / inf = signed zero
+
+        # TODO: implement step 1.
+
+        # interstep: setup.
+
+        sign_one = self.sign_bit
+        exponent_one = self.exponent
+        mantissa_one = self.mantissa
+
+        sign_two = other.sign_bit
+        exponent_two = other.exponent
+        mantissa_two = other.mantissa
+
+        q_sign = '0' if sign_one == sign_two else '1'
+
+        # step 2: calculating the difference of exponents.
+        # 2a: get it.
+
+        exponent_dif = arth.dif('0'+exponent_one, '0'+exponent_two)[0]
+        exponent_dif = arth.sum(exponent_dif,
+                                 '0' + '1'*(EXPONENT_BIT_COUNT - 1))[0]
+
+        # 2b: validate quotient's exponent.
+        # NOTE: I hope this works.
+
+        if exponent_dif[0] == '1':
+            if binstrings.first_is_bigger(exponent_one, exponent_two):
+                return (self.pos_infinity()
+                        if q_sign == '0'
+                        else self.neg_infinity())
+            else:
+                return (self.pos_zero()
+                        if q_sign == '0'
+                        else self.neg_zero())
+        
+        q_exponent = exponent_dif[1:]
+
+        # step 3: divide mantissas.
+
+        mantissa_one_double = mantissa_one + '0'*MANTISSA_BIT_COUNT
+        q_mantissa = arth.idiv('0'+mantissa_one_double, '0'+mantissa_two)[0][-24:]
+
+        # step 4: normalize the result.
+
+        while q_mantissa[0] == '0' and q_exponent != '0'*EXPONENT_BIT_COUNT:
+            q_mantissa = basic.shift_left(q_mantissa)
+            # decrementing exponent:
+            q_exponent = basic.sum(q_exponent, '11')[0]
+
+        # finally return the result.
+        q_binary = q_sign + q_exponent + q_mantissa[1:]
+        q = deepcopy(self)
+        q.binary = q_binary
+
+        return q
     

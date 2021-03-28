@@ -66,6 +66,16 @@ def test():
         print('{0} * {1} = {2}\n'.format(my_a.binary,
                                          my_b.binary,
                                          (my_a*my_b).binary))
+
+        print('Quotient:')
+        print('{0} / {1} = {2}'.format(a, b, a/b))
+        print('{0} / {1} = {2}'.format(my_a, my_b, my_a/my_b))
+        print('{0} / {1} = {2}'.format(Float.float_to_bin(a),
+                                       Float.float_to_bin(b),
+                                       Float.float_to_bin(a/b)))
+        print('{0} / {1} = {2}\n'.format(my_a.binary,
+                                         my_b.binary,
+                                         (my_a/my_b).binary))
         
         print('-'*50)
 
