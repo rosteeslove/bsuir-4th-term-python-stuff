@@ -1,1 +1,0 @@
-DEF_BIT_NUM = 16
