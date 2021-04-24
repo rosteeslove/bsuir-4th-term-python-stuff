@@ -13,16 +13,8 @@ being the number of bricks.
 """
 
 
-def solution(x):
-    """Return a number of ways to build a staircase
-    of a given number of bricks.
-
-    The rules are in the readme.txt and succintly in the
-    module docstring.
-
-    Args:
-        x (int): number of bricks (3 <= x <= 200).
-    """
+def wrong(x):
+    """The first try."""
     table = [[0 for _ in range(x+1)] for __ in range(x+1)]
     table[2][1] = 1
     for m in range(3, x):
@@ -41,3 +33,28 @@ def solution(x):
         result += table[i][x - i]
 
     return result
+
+
+def right(n):
+    """Much easier than originally thought.
+
+    Source: https://stackoverflow.com/questions/41326134/brick-tower-building-puzzle
+    """
+    A = [1] + [0]*n
+    for k in range(1, n+1):
+        for i in range(n, k-1, -1):
+            A[i] += A[i-k]
+    return A[n] - 1
+
+
+def solution(n):
+    """Return a number of ways to build one staircase
+    of a given number of bricks.
+
+    The rules are in the readme.txt and succintly in the
+    module docstring.
+
+    Args:
+        n (int): number of bricks (3 <= n <= 200).
+    """
+    return right(n)
