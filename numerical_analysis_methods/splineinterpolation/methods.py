@@ -1,14 +1,19 @@
 """
 This module contains functions implementing spline interpolation
 methods.
+
+NOTE: all the following methods accepting nodes as an argument assume
+the list of nodes is sorted.
 """
 
+import bisect
+import copy
 import numpy as np
 from numpy.polynomial.polynomial import Polynomial
 from IPython.display import display, Math, HTML
 
 
-def interpolate(nodes):
+def spline_coeffs_alpha(nodes):
     """
     Return a list of coefficients of cubic splines interpolating
     a list of nodes.
@@ -61,14 +66,129 @@ def interpolate(nodes):
     return result
 
 
-def splines(nodes):
+def tridiag_solve(A, b):
+    """
+    Return x-vector solution to a A*x = b matrix equation.
+
+    Args:
+        A (2d list): n-by-n tridiagonal matrix.
+        b (list): n-by-1 vector.
+
+    Source: https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+    """
+    A = copy.copy(A)
+    b = copy.copy(b)
+    n = len(A)
+
+    # forward sweep:
+    A[0][1] /= A[0][0]
+    for i in range(1, n-1):
+        A[i][i+1] /= (A[i][i] - A[i][i-1]*A[i-1][i])
+
+    b[0] /= A[0][0]
+    for i in range(1, n):
+        b[i] = (b[i] - A[i][i-1]*b[i-1]) / (A[i][i] - A[i][i-1]*A[i-1][i])
+
+    # backward sweep (back substitution):
+    x = np.zeros(n)
+    x[-1] = b[-1]
+    for i in range(n-2, -1, -1):
+        x[i] = b[i] - A[i][i+1]*x[i+1]
+
+    return x
+
+
+def setup_system(as_, hs):
+    """
+    Return a matrix-vector system to solve with Thomas's algorithm
+    to retrieve vector of 'c' coefficients.
+
+    Args:
+        as_ (list): a list of 'a' coefficients of splines.
+        hs (list): a list of 'h' coefficients of splines.
+
+    Source: https://ru.wikipedia.org/wiki/%D0%9A%D1%83%D0%B1%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%BF%D0%BB%D0%B0%D0%B9%D0%BD
+    """
+    size = len(hs) - 2  # matrix size is num of nodes minus 2
+    matrix = np.zeros((size, size))
+
+    # setting up the vector for the system:
+    vector = np.array([3*((as_[i+1]-as_[i])/hs[i+1]
+                      - (as_[i]-as_[i-1])/hs[i]) for i in range(1, 1+size)])
+
+    # setting up the first row of the matrix:
+    matrix[0][0] = 2*(hs[1] + hs[2])
+    matrix[0][1] = hs[2]
+
+    # setting up the middle rows of the matrix:
+    for i in range(1, size-1):
+        row = matrix[i]
+
+        row[i-1] = hs[i+1]
+        row[i] = 2*(hs[i+1] + hs[i+2])
+        row[i+1] = hs[i+2]
+
+    # setting up the last row of the matrix:
+    matrix[-1][-2] = hs[-2]
+    matrix[-1][-1] = 2*(hs[-2] + hs[-1])
+
+    return matrix, vector
+
+
+def spline_coeffs_beta(nodes):
+    """
+    Return a list of coefficients of cubic splines interpolating
+    a list of nodes.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+
+    Source: https://ru.wikipedia.org/wiki/%D0%9A%D1%83%D0%B1%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%BF%D0%BB%D0%B0%D0%B9%D0%BD
+    """
+    spline_count = len(nodes) - 1
+
+    xs = [node[0] for node in nodes]
+    ys = [node[1] for node in nodes]
+    hs = [0] + [xs[i+1] - xs[i] for i in range(spline_count)]
+
+    matrix, vector = setup_system(ys, hs)
+    cs = tridiag_solve(matrix, vector).tolist()
+    cs = [0] + cs + [0]  # c[0] and c[n] are zero (see source).
+
+    bs = []
+    for i in range(1, spline_count+1):
+        bs.append((ys[i] - ys[i-1]) / hs[i] + hs[i]*(2*cs[i] + cs[i-1]) / 3)
+
+    ds = []
+    for i in range(1, spline_count+1):
+        ds.append((cs[i] - cs[i-1]) / (3*hs[i]))
+
+    result = [[a, b, c, d] for (a, b, c, d) in zip(ys[1:], bs, cs[1:], ds)]
+    return result
+
+
+def splines_alpha(nodes):
     """
     Return a list of cubic splines interpolating a list of nodes.
 
     Args:
         nodes (list of tuples): a list of interpolation nodes.
     """
-    splines_coeffs = interpolate(nodes)
+    splines_coeffs = spline_coeffs_alpha(nodes)
+
+    polys = [Polynomial(abcd) for abcd in splines_coeffs]
+
+    return polys
+
+
+def splines_beta(nodes):
+    """
+    Return a list of cubic splines interpolating a list of nodes.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+    """
+    splines_coeffs = spline_coeffs_beta(nodes)
 
     polys = [Polynomial(abcd) for abcd in splines_coeffs]
 
@@ -103,3 +223,31 @@ def latex_print(poly: Polynomial):
     result = result.lstrip('+')
 
     display(Math(result))
+
+
+def approx_beta(nodes):
+    """
+    Return a function approximating a given node list using
+    the beta-algorithm of this module.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+    """
+    xs = [node[0] for node in nodes]
+    polys = splines_beta(nodes)
+
+    def approximation(x):
+        if x < xs[0]:
+            return None
+
+        if x > xs[-1]:
+            return None
+
+        index = bisect.bisect_left(xs, x)
+
+        if index == 0:
+            return polys[0](x - xs[1])
+        else:
+            return polys[index - 1](x - xs[index])
+
+    return approximation
