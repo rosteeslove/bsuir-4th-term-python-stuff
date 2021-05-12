@@ -251,3 +251,78 @@ def approx_beta(nodes):
             return polys[index - 1](x - xs[index])
 
     return approximation
+
+
+def easy_derivative(x1, y1, x2, y2, x3, y3):
+    """Return easy derivative at x2.
+
+    Easy derivative = arithmetic mean of (y2-y1) / (x2-x1)
+    and (y3-y2) / (x3-x2).
+    """
+    d1 = (y2-y1) / (x2-x1)
+    d2 = (y3-y2) / (x3-x2)
+
+    return (d1+d2) / 2
+
+
+def hermitian_coeffs(x2, y2, d2, x1, y1, d1):
+    """Return a, b, c, d cubic Hermitian spline coeffs
+    in [x1, x2] interval with function being y1 and y2 in
+    x1 and x2 respectively and derivative being d1 and d2 in
+    x1 and x2 respectively.
+    """
+    A = np.array([[0**3, 0**2, 0, 1],
+                  [(x2-x1)**3, (x2-x1)**2, (x2-x1), 1],
+                  [3*0**2, 2*0, 1, 0],
+                  [3*(x2-x1)**2, 2*(x2-x1), 1, 0]])
+    b = np.array([y1, y2, d1, d2])
+
+    return np.linalg.solve(A, b)[::-1]
+
+
+def hermitian_spline_coeffs(nodes):
+    """Return a list of coefficients of Hermitian cubic splines
+    (defect = 2) for a list of interpolation nodes.
+
+    Args:
+        nodes (list of tuples): list of interpolation nodes.
+    """
+    assert len(nodes) >= 3
+
+    coeffs = []
+
+    xs = [node[0] for node in nodes]
+    ys = [node[1] for node in nodes]
+
+    coeffs.append(hermitian_coeffs(xs[0], ys[0], 0,
+                                   xs[1], ys[1], easy_derivative(
+                                   xs[0], ys[0], xs[1], ys[1], xs[2], ys[2])))
+
+    for i in range(1, len(nodes)-2):
+        coeffs.append(hermitian_coeffs(
+            xs[i], ys[i], easy_derivative(
+                xs[i-1], ys[i-1], xs[i], ys[i], xs[i+1], ys[i+1]),
+            xs[i+1], ys[i+1], easy_derivative(
+                xs[i], ys[i], xs[i+1], ys[i+1], xs[i+2], ys[i+2])))
+
+    coeffs.append(hermitian_coeffs(xs[-2], ys[-2], easy_derivative(
+        xs[-3], ys[-3], xs[-2], ys[-2], xs[-1], ys[-1]),
+        xs[-1], ys[-1], 0))
+
+    return coeffs
+
+
+def hermitian_splines(nodes):
+    """Return a list of cubic splines of defect 2
+    interpolating a list of nodes.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+
+    Source: https://www.nbrb.by/bv/articles/10644.pdf
+    """
+    splines_coeffs = hermitian_spline_coeffs(nodes)
+
+    polys = [Polynomial(abcd) for abcd in splines_coeffs]
+
+    return polys
