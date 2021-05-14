@@ -225,16 +225,17 @@ def latex_print(poly: Polynomial):
     display(Math(result))
 
 
-def approx_beta(nodes):
-    """
-    Return a function approximating a given node list using
-    the beta-algorithm of this module.
+def approx(nodes, spline_func):
+    """Return a function approximating a given nodelist using
+    a spline-producing function.
 
     Args:
         nodes (list of tuples): a list of interpolation nodes.
+        spline_func (function): a function producing splines
+        using a node list.
     """
     xs = [node[0] for node in nodes]
-    polys = splines_beta(nodes)
+    polys = spline_func(nodes)
 
     def approximation(x):
         if x < xs[0]:
@@ -251,6 +252,17 @@ def approx_beta(nodes):
             return polys[index - 1](x - xs[index])
 
     return approximation
+
+
+def approx_beta(nodes):
+    """
+    Return a function approximating a given node list using
+    the beta-algorithm of this module.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+    """
+    return approx(nodes, splines_beta)
 
 
 def easy_derivative(x1, y1, x2, y2, x3, y3):
@@ -326,3 +338,39 @@ def hermitian_splines(nodes):
     polys = [Polynomial(abcd) for abcd in splines_coeffs]
 
     return polys
+
+
+def hermitian_approx(nodes):
+    """
+    Return a function approximating a given node list using
+    the hermitian cubic splines.
+
+    Args:
+        nodes (list of tuples): a list of interpolation nodes.
+    """
+    return approx(nodes, hermitian_splines)
+
+
+def interpolation_error(true_func, nodes, approx_method, shift=0):
+    """Return max error of spline interpolation of a function.
+
+    Args:
+        true_func (function): a function being interpolated.
+        nodes (list of tuples): a list of interpolation nodes.
+        approx_method (function): a function to produce splines
+        from a list of nodes.
+        shift (integer): number of nodes on the each side
+        of the domain, between which the error is NOT to be calculated
+        (I hope this makes sense).
+    """
+    assert len(nodes) > 2*shift
+
+    approx = approx_method(nodes)
+
+    def diff(x):
+        return abs(true_func(x) - approx(x))
+
+    a = nodes[shift][0]
+    b = nodes[-(shift+1)][0]
+
+    return max([diff(x) for x in np.linspace(a, b, 1_000)])
