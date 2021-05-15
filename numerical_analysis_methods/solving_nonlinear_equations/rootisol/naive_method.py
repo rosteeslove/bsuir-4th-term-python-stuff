@@ -7,10 +7,10 @@ same step to find intervals in which the function crosses the x-axis.
 """
 
 
-DEFAULT_STEP = 0.001
+DEFAULT_STEP = 0.001   # precision
 
 
-def isolate_roots(f, left, right):
+def isolate_roots(f, left, right, eps=DEFAULT_STEP):
     """
     Returns the list of root intervals of f function
     in the [left, right] interval using the most naive
@@ -22,9 +22,9 @@ def isolate_roots(f, left, right):
     while right > current_pos:
         if f(current_pos) == 0:
             root_intervals.append((current_pos, current_pos))
-        elif f(current_pos)*f(current_pos + DEFAULT_STEP) < 0:
-            root_intervals.append((current_pos, current_pos+DEFAULT_STEP))
+        elif f(current_pos)*f(current_pos + eps) < 0:
+            root_intervals.append((current_pos, current_pos+eps))
 
-        current_pos += DEFAULT_STEP
+        current_pos += eps
 
     return root_intervals

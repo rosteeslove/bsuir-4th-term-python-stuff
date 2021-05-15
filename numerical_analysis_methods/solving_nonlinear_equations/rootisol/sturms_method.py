@@ -5,7 +5,6 @@ and the count_roots method implementing Sturm's method of calculating
 the number of roots of a given polynomial on a given interval.
 """
 
-import numpy as np
 from numpy.polynomial import polynomial as poly
 from numpy.polynomial.polynomial import Polynomial
 
