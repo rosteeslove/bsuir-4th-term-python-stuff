@@ -23,8 +23,8 @@ def _iteration(sturms_seq, left, right, eps):
     elif right - left <= eps:
         return [(left, right)]
     else:
-        return (_iteration(sturms_seq, left, (left+right) / 2)
-                + _iteration(sturms_seq, (left+right) / 2, right))
+        return (_iteration(sturms_seq, left, (left+right) / 2, eps)
+                + _iteration(sturms_seq, (left+right) / 2, right, eps))
 
 
 def isolate_roots(p, left, right, eps=MIN_RADIUS):

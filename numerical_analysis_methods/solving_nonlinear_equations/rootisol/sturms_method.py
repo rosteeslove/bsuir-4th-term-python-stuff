@@ -41,7 +41,7 @@ def _num_of_sign_changes(seq):
     """
     num = 0
     for i in range(len(seq)-1):
-        if seq[i]*seq[i+1] < 0:
+        if seq[i]*seq[i+1] <= 0:
             num += 1
 
     return num
