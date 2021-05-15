@@ -1,8 +1,6 @@
 """
-This module contains the calculate_root method to find function f's
-root on (a, b) interval using 'simple iteration method' which also
-requires some lambda function to facilitate the convergence
-to the root.
+This module contains the calculate_root method to approximate
+polynomial's root in an interval using simple iteration method.
 """
 
 
@@ -15,22 +13,18 @@ MAX_ITERATION_COUNT = 1_000_000
 
 def calculate_root(f, lambda_function, a, b, eps):
     """
-    Return root (assuming there's one) of f function
-    on the (a, b) interval using 'simple iteration method'
-    and also return number of iterations.
+    Return root approximation calculated with simple iteration method
+    as well as number of iterations made to calculate it.
 
-    The method also requires some lambda function
-    to facilitate the convergence to the root.
-
-    Remark: the method to check if the x is within error
-    is to compare the x in question to the true x;
-    that could be changed but bruh.
+    Root of polynomial f is approximated in [a, b] interval until
+    error is smaller than epsilon eps using lambda function to
+    facilitate convergence.
     """
     assert f(a)*f(b) < 0
 
     def phi_function(some_x):
         return some_x + lambda_function(some_x)*f(some_x)
-    
+
     x = a
     true_x = sp.optimize.brentq(f, a, b)
 

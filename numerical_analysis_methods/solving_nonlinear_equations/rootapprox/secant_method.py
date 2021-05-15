@@ -28,4 +28,4 @@ def calculate_root(f, a, b, eps):
         if abs(f(a)) < eps:
             break
 
-    return l
+    return a

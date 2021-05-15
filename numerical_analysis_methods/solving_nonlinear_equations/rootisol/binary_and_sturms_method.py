@@ -3,7 +3,7 @@ This module contains the isolate_roots method for polynomials only.
 """
 
 
-import sturms_method as sm
+from rootisol import sturms_method as sm
 
 
 MIN_RADIUS = 0.001
@@ -13,7 +13,6 @@ def _iteration(sturms_seq, left, right):
     """
     Returns the list of root intervals of some polynomial with
     sturms_seq Sturm's sequence in the [left, right] interval.
-
 
     Works recursively.
     """

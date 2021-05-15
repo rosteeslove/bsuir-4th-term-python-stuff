@@ -5,25 +5,26 @@ and the count_roots method implementing Sturm's method of calculating
 the number of roots of a given polynomial on a given interval.
 """
 
+import numpy as np
+from numpy.polynomial import polynomial as poly
+from numpy.polynomial.polynomial import Polynomial
 
-import polynomial as poly
 
-
-def sturms_sequence(p):
+def sturms_sequence(p: Polynomial):
     """
     Returns Sturm's sequence of a given polynomial.
     """
-
     # setting up the Sturm's sequence.
     sturms_seq = []
     sturms_seq.append(p)
-    sturms_seq.append(p.derivative())
+    sturms_seq.append(p.deriv())
 
     # filling the Sturm's sequence list.
-    f = -(sturms_seq[-2] / sturms_seq[-1])[1]
-    while not f.is_zero():
+    f = -Polynomial(poly.polydiv(sturms_seq[-2].coef, sturms_seq[-1].coef)[1])
+    while f.degree() != 0 or f.coef[0] != 0:
         sturms_seq.append(f.copy())
-        f = -(sturms_seq[-2] / sturms_seq[-1])[1]
+        f = -Polynomial(poly.polydiv(
+            sturms_seq[-2].coef, sturms_seq[-1].coef)[1])
 
     return sturms_seq
 
@@ -32,7 +33,6 @@ def _evaluate_sturms_seq_at_x(seq, x):
     """
     Returns list of seq argument polynomials' values at x.
     """
-
     return [v(x) for v in seq]
 
 
@@ -43,7 +43,7 @@ def _num_of_sign_changes(seq):
     num = 0
     for i in range(len(seq)-1):
         if seq[i]*seq[i+1] < 0:
-            nr += 1
+            num += 1
 
     return num
 
