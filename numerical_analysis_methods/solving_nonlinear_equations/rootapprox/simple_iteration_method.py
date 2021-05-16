@@ -5,7 +5,7 @@ polynomial's root in an interval using simple iteration method.
 
 
 import numpy as np
-import scipy as sp
+import scipy.optimize as spo
 
 
 MAX_ITERATION_COUNT = 1_000_000
@@ -26,15 +26,11 @@ def calculate_root(f, lambda_function, a, b, eps):
         return some_x + lambda_function(some_x)*f(some_x)
 
     x = a
-    true_x = sp.optimize.brentq(f, a, b)
+    true_x = spo.brentq(f, a, b)
 
     iter_count = 0
-    while iter_count < MAX_ITERATION_COUNT:
+    while abs(x - true_x) > eps and iter_count < MAX_ITERATION_COUNT:
         x = phi_function(x)
-
-        if abs(x - true_x) < eps:
-            break
-
         iter_count += 1
 
     return x, iter_count

@@ -4,10 +4,11 @@ polynomial's root in an interval using Newton's method.
 """
 
 
+from numpy.polynomial.polynomial import Polynomial
 from rootapprox import simple_iteration_method as sim
 
 
-def calculate_root(f, a, b, eps):
+def calculate_root(f: Polynomial, a, b, eps):
     """
     Return root approximation calculated with Newton's method as well
     as number of iterations made to calculate it.
@@ -17,7 +18,9 @@ def calculate_root(f, a, b, eps):
     """
     assert f(a)*f(b) < 0
 
-    def f_derivative(x):
-        return f.derivative(x)
+    df = f.deriv()
 
-    return sim.calculate_root(f, 1/f_derivative, a, b, eps)
+    def newtons_lambda(x):
+        return -1 / df(x)
+
+    return sim.calculate_root(f, newtons_lambda, a, b, eps)

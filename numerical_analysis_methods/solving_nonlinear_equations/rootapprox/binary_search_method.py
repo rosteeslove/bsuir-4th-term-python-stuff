@@ -15,18 +15,15 @@ def calculate_root(f, a, b, eps):
     """
     assert f(a)*f(b) < 0
 
-    def middle(a, b):
-        return (a+b) / 2
-
     iter_count = 0
-    middle = middle(a, b)
+    middle = (a+b) / 2
     while (abs(b-a) > eps
            and iter_count < MAX_ITERATION_COUNT):
         if f(middle)*f(a) > 0:
             a = middle
         else:
             b = middle
-        middle = middle(a, b)
+        middle = (a+b) / 2
         iter_count += 1
 
     return middle, iter_count

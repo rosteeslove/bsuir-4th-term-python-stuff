@@ -4,13 +4,13 @@ root on (a, b) interval using secant method.
 """
 
 
-import numpy as np
-
+from numpy.polynomial.polynomial import Polynomial
+import scipy.optimize as spo
 
 MAX_ITERATION_COUNT = 1_000_000
 
 
-def calculate_root(f, a, b, eps):
+def calculate_root(f: Polynomial, a, b, eps):
     """
     Return root (assuming there's one) of f function
     on the (a, b) interval using secant method
@@ -23,9 +23,20 @@ def calculate_root(f, a, b, eps):
     if f(a) > 0:
         f = -f
 
-    while True:
-        a += (b - a) / (f(b) - f(a)) * abs(f(a))
-        if abs(f(a)) < eps:
-            break
+    if f(b)*f.deriv(2)(b) > 0:
+        x = a
+        c = b
+    elif f(a)*f.deriv(2)(a) > 0:
+        x = b
+        c = a
+    else:
+        raise Exception(message='Secant method failed.')
 
-    return a
+    true_x = spo.brentq(f, a, b)
+
+    iter_count = 0
+    while abs(x - true_x) > eps and iter_count < MAX_ITERATION_COUNT:
+        x -= (c - x) / (f(c) - f(x)) * f(x)
+        iter_count += 1
+
+    return x, iter_count
