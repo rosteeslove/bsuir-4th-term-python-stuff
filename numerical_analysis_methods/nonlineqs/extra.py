@@ -2,10 +2,11 @@
 This module contains extra stuff.
 """
 
+import random
+import numpy as np
 
 from numpy.polynomial.polynomial import Polynomial
 from IPython.display import display, Math, HTML
-
 
 def latex_print(poly: Polynomial):
     """
@@ -34,3 +35,9 @@ def latex_print(poly: Polynomial):
     result = result.lstrip('+')
 
     display(Math(result))
+
+def random_poly(norm):
+    """
+    Return a polynomial of degree 4 with random coefficients; the last coefficient is 0.
+    """
+    return np.polynomial.polynomial.Polynomial([0, norm*(2*random.random()-1), norm*(2*random.random()-1), norm*(2*random.random()-1), norm*(2*random.random()-1)])

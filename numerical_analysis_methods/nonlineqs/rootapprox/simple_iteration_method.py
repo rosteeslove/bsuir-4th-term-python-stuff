@@ -4,11 +4,10 @@ polynomial's root in an interval using simple iteration method.
 """
 
 
-import numpy as np
 import scipy.optimize as spo
 
 
-MAX_ITERATION_COUNT = 1_000_000
+MAX_ITERATION_COUNT = 1_000
 
 
 def calculate_root(f, lambda_function, a, b, eps):

@@ -4,7 +4,7 @@ root on (a, b) interval using binary search algorithm.
 """
 
 
-MAX_ITERATION_COUNT = 1_000_000
+MAX_ITERATION_COUNT = 1_000
 
 
 def calculate_root(f, a, b, eps):

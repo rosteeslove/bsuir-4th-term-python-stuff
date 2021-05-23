@@ -7,7 +7,7 @@ root on (a, b) interval using secant method.
 from numpy.polynomial.polynomial import Polynomial
 import scipy.optimize as spo
 
-MAX_ITERATION_COUNT = 1_000_000
+MAX_ITERATION_COUNT = 1_000
 
 
 def calculate_root(f: Polynomial, a, b, eps):
@@ -30,7 +30,7 @@ def calculate_root(f: Polynomial, a, b, eps):
         x = b
         c = a
     else:
-        raise Exception(message='Secant method failed.')
+        raise Exception()
 
     true_x = spo.brentq(f, a, b)
 
