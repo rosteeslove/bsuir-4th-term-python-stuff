@@ -1,7 +1,5 @@
 """
 This module contains some base functions for math statistics.
-
-To be used for tasks 4 and 5.
 """
 
 

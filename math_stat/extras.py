@@ -1,7 +1,5 @@
 """
 This module contains some extra functions for math statistics tasks.
-
-To be used for tasks 4 and 5.
 """
 
 
@@ -10,5 +8,10 @@ import numpy as np
 
 
 def optimal_bin_count(n):
-    return math.floor(np.cbrt(n))
+    assert n > 0
+
+    if n <= 100:
+        return math.floor(np.sqrt(n))
+    else:
+        return 3*math.floor(np.log10(n))
     

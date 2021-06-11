@@ -1,8 +1,6 @@
 """
 This module contains functions to retrieve chi squared coefficient
 for a varseries and a hypothesis function.
-
-To be used for tasks 4 and 5.
 """
 
 
