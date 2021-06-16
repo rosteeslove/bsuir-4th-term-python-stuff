@@ -5,11 +5,16 @@ plotting histograms and linear interpolations for them
 """
 
 
+import math
 import copy
 import matplotlib.pyplot as plt
 
 
-def equalbin(vs, group_num, normalize='частоты'):
+# условный эпсилон для работы с флоутами в equalvar
+EPS = 0.000000001
+
+
+def equalbin(vs, group_num, mode='частоты'):
     """Return data needed for type 1 histogram
     as a list of tuples each being:
     (a bin's left bound, a bin's occurrences count)
@@ -17,9 +22,9 @@ def equalbin(vs, group_num, normalize='частоты'):
     Each bin's interval has its left bound included
     and right excluded, e.g. [0, 1), [1, 2), [3, 4), ...
 
-    Re the normalize parameter:
+    Re the mode parameter:
      - use 'частоты' for each bin's height to be
-    the number of occurences of random values
+    the number of occurences of random values in it
     from vs varseries;
      - use 'частости' for each bin's height to be
     the probability for the random value to end up in
@@ -44,12 +49,12 @@ def equalbin(vs, group_num, normalize='частоты'):
         hdata[index][1] += 1
 
     # normalizing:
-    if normalize == 'частоты':
+    if mode == 'частоты':
         pass
-    elif normalize == 'частости':
+    elif mode == 'частости':
         for interval in hdata[:-1]:
             interval[1] /= n
-    elif normalize == 'плотность':
+    elif mode == 'плотность':
         for interval in hdata[:-1]:
             interval[1] /= h*n
 
@@ -57,54 +62,46 @@ def equalbin(vs, group_num, normalize='частоты'):
     return hdata
 
 
-def equalvar(a, b, vs, group_num, normalize=True):
+def equalvar(vs, group_num, **kwargs):
     """Return data needed for type 2 histogram
     as a list of tuples each being:
-    (a bin's left bound, a bin's occurrences count)
+    (a bin's left bound, a bin's height)
     
     Each bin's interval has its left bound included
     and right excluded, e.g. [0, 1), [1, 2), [3, 4), ...
     """
-    bin_capacity = len(vs) // group_num + (1 if len(vs) % group_num != 0 else 0)
+    n = len(vs)
+    m = group_num
+    a = min(vs)
+    b = max(vs)
 
-    hdata = [[a, 0]]
-    for i in range(len(vs)):
-        hdata[-1][1] += 1
-        last_bin_empty = False
+    bin_capacity = n / m
 
-        # if the last bin is full:
-        if hdata[-1][1] == bin_capacity:
-            # calculate its right bound:
-            if i == len(vs) - 1:
-                right_bound = b
-            else:
-                right_bound = (vs[i] + vs[i+1]) / 2
+    # filling hdata:
 
-            # add a new empty bin:
-            hdata.append([right_bound, 0])
-            last_bin_empty = True
+    hdata = [[0, 0] for _ in range(m+1)]
 
-    if last_bin_empty:
-        del hdata[-1]
+    # working w/ first bin (it's guaranteed that it exists):
+    hdata[0][0] = a
+    if m == 1:
+        hdata[0][1] = 1 / (m*(b-a))
 
-    if normalize:
-        square = 0
-        for i in range(len(hdata) - 1):
-            # calculating local density and updating square:
-            hdata[i][1] = hdata[i][1] / (hdata[i+1][0] - hdata[i][0])
-            square += hdata[i][1] * (hdata[i+1][0] - hdata[i][0])
-        
-        hdata[-1][1] = hdata[-1][1] / (b - hdata[-1][0])
-        square += hdata[-1][1] * (b - hdata[-1][0])
+    # working w/ the other m-1 if m-1 > 0:
+    for i in range(1, m):
+        vindex = math.floor(i*bin_capacity + EPS) # ATTENTION HERE
+        ai = hdata[i-1][0]
+        bi = (vs[vindex] + vs[vindex+1]) / 2
+        h = bi - ai
+        hdata[i-1][1] = 1 / (m*h)
+        hdata[i][0] = bi
 
-        for hd in hdata:
-            hd[1] /= square
-    else:
-        for hd in hdata:
-            hd[1] /= len(vs)
+    if m > 1:
+        hdata[-2][1] = 1 / (m*(b-hdata[-2][0]))
 
-    hdata.append([b, hdata[-1][1]])
-            
+    # setting last (pseudo)bin:
+    hdata[-1][0] = b
+    hdata[-1][1] = hdata[-2][1]
+
     return hdata
 
 
@@ -142,16 +139,16 @@ def plot_polygon(hdata, cumulative=False):
     hdata = copy.deepcopy(hdata)
 
     if cumulative:
-        ps = [hd[0] for hd in hdata[1:]]
-        for i in range(1, len(hdata)-1):
-            hdata[i][1] += hdata[i-1][1]
+        xs = [hd[0] for hd in hdata]
+        ys = [0]*len(xs)
+        for (i, hd) in enumerate(hdata[:-1]):
+            ys[i+1] = ys[i]+hd[1]
     else:
-        ps = [(hdata[i][0] + hdata[i+1][0]) / 2 for i in range(len(hdata) - 1)]
+        xs = [(hdata[i][0] + hdata[i+1][0]) / 2 for i in range(len(hdata) - 1)]
+        ys = [hd[1] for hd in hdata[:-1]]
 
     # plotting polygon:
-    plt.scatter(ps,
-                [hd[1] for hd in hdata[:-1]])
-    plt.plot(ps,
-             [hd[1] for hd in hdata[:-1]],
+    plt.scatter(xs, ys)
+    plt.plot(xs, ys,
              label=('полигон распределения' if not cumulative
              else 'кумулята'))
