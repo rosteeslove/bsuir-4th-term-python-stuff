@@ -35,6 +35,10 @@ def equalbin(vs, group_num, mode='частоты'):
     """
     n = len(vs)
     m = group_num
+
+    assert n >= 1
+    assert m >= 1
+
     a = min(vs)
     b = max(vs)
 
@@ -62,16 +66,24 @@ def equalbin(vs, group_num, mode='частоты'):
     return hdata
 
 
-def equalvar(vs, group_num, **kwargs):
+def equalvar(vs, group_num, mode='частоты'):
     """Return data needed for type 2 histogram
     as a list of tuples each being:
     (a bin's left bound, a bin's height)
     
     Each bin's interval has its left bound included
     and right excluded, e.g. [0, 1), [1, 2), [3, 4), ...
+
+    Re the mode parameter:
+     - the same stuff as in equalbin.
     """
     n = len(vs)
     m = group_num
+
+    assert n >= 2
+    assert m >= 1
+    assert n >= m
+
     a = min(vs)
     b = max(vs)
 
@@ -81,22 +93,42 @@ def equalvar(vs, group_num, **kwargs):
 
     hdata = [[0, 0] for _ in range(m+1)]
 
+    def mode1(index, vindex):
+        return vindex - sum([hd[1] for hd in hdata[:index]])
+
+    def mode2(index, vindex):
+        return vindex / n - sum([hd[1] for hd in hdata[:index]])
+
+    def mode3(index, vindex):
+        ai = hdata[index-1][0]
+        bi = (vs[vindex-1] + vs[vindex]) / 2
+        h = bi - ai
+        return 1 / (m*h)
+
+    if mode == 'частоты':
+        mode_func = mode1
+    elif mode == 'частости':
+        mode_func = mode2
+    elif mode == 'плотность':
+        mode_func = mode3
+    else:
+        raise Exception
+
     # working w/ first bin (it's guaranteed that it exists):
+    # todo: maybe fix this? nah
     hdata[0][0] = a
     if m == 1:
         hdata[0][1] = 1 / (m*(b-a))
 
-    # working w/ the other m-1 if m-1 > 0:
+    # working w/ the other m-1 bins if m-1 > 0:
     for i in range(1, m):
         vindex = math.floor(i*bin_capacity + EPS) # ATTENTION HERE
-        ai = hdata[i-1][0]
-        bi = (vs[vindex] + vs[vindex+1]) / 2
-        h = bi - ai
-        hdata[i-1][1] = 1 / (m*h)
+        bi = (vs[vindex-1] + vs[vindex]) / 2
+        hdata[i-1][1] = mode_func(i, vindex)
         hdata[i][0] = bi
 
     if m > 1:
-        hdata[-2][1] = 1 / (m*(b-hdata[-2][0]))
+        hdata[-2][1] = mode_func(m, n-1)
 
     # setting last (pseudo)bin:
     hdata[-1][0] = b

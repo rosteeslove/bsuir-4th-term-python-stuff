@@ -10,14 +10,14 @@ import hist
 import extras
 
 
-def chi_squared(a, b, vs, hypo_F, bincount=None):
+def chi_squared(vs, hypo_F, bincount=None):
     n = len(vs)
     if not bincount:
         bincount = extras.optimal_bin_count(n)
     m = bincount
 
     # getting expected and observed data:
-    hdata = hist.equalvar(a, b, vs, m, normalize=False)
+    hdata = hist.equalvar(vs, m, mode='частости')
     xs = [hd[0] for hd in hdata]
     ys = [hd[1] for hd in hdata]
 

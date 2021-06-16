@@ -18,8 +18,11 @@ klambda_095 = 1.36
 klambda_099 = 1.63
 
 
-def max_deviation(a, b, vs, Fy_analytic):
+def max_deviation(vs, Fy_analytic):
     n = len(vs)
+
+    a = min(vs)
+    b = max(vs)
 
     # getting expected data:
     xs = np.linspace(a, b, 1000)
@@ -40,7 +43,7 @@ def max_deviation(a, b, vs, Fy_analytic):
     return max(diffs)
 
 
-def klambda(a, b, vs, Fy_analytic):
+def klambda(vs, Fy_analytic):
     n = len(vs)
-    md = max_deviation(a, b, vs, Fy_analytic)
+    md = max_deviation(vs, Fy_analytic)
     return math.sqrt(n)*md
