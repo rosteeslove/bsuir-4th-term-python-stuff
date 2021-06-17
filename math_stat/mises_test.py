@@ -20,6 +20,6 @@ def momega(vs, Fy_analytic):
     n_omega_squared += 1/(12*n)
 
     for (i, v) in enumerate(vs):
-        n_omega_squared += (Fy_analytic(v) - (i-0.5)/n)**2
+        n_omega_squared += (Fy_analytic(v) - (i+0.5)/n)**2
 
     return n_omega_squared
